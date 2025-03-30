@@ -1,6 +1,5 @@
 WITH FISH_INFO_REMOVED_NULL AS (
-    SELECT ID, 
-           (CASE
+    SELECT (CASE
                WHEN LENGTH IS NULL THEN 10
                ELSE LENGTH
            END) AS LENGTH
