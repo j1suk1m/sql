@@ -14,24 +14,31 @@ WITH
     FROM
       CAR_RENTAL_COMPANY_CAR
     WHERE
-      CAR_TYPE = '트럭')
+      CAR_TYPE = '트럭'),
+  CAR_RENTAL_DAYS AS ( -- 자동차 대여 기간 정보 테이블
+    SELECT
+      HISTORY_ID,
+      CAR_ID,
+      DATEDIFF(END_DATE, START_DATE) + 1 AS RENTAL_DAYS
+    FROM
+      CAR_RENTAL_COMPANY_RENTAL_HISTORY)
 
 SELECT 
   HISTORY_ID, 
-  ROUND(DAILY_FEE * (1 - (IFNULL(DISCOUNT_RATE, 0) * 0.01)) * (DATEDIFF(END_DATE, START_DATE) + 1)) AS FEE -- 할인율을 적용한 총 대여 금액
+  ROUND(DAILY_FEE * (1 - (IFNULL(DISCOUNT_RATE, 0) * 0.01)) * RENTAL_DAYS) AS FEE -- 할인율을 적용한 총 대여 금액
 FROM 
-  CAR_RENTAL_COMPANY_RENTAL_HISTORY AS HISTORY -- 자동차 대여 기록 테이블
-JOIN 
   CURRENT_TRUCK_RENTAL AS RENTAL -- 대여 중인 트럭 정보 테이블
-ON 
-  HISTORY.CAR_ID = RENTAL.CAR_ID
+JOIN
+  CAR_RENTAL_DAYS -- 자동차 대여 기간 정보 테이블
+ON
+  RENTAL.CAR_ID = CAR_RENTAL_DAYS.CAR_ID
 LEFT OUTER JOIN 
   TRUCK_DISCOUNT_PLAN AS DISCOUNT -- 트럭의 대여 기간 종류별 할인 정책 테이블
 ON 
   DURATION_TYPE LIKE (CASE
-                        WHEN DATEDIFF(END_DATE, START_DATE) + 1 >= 90 THEN '90%'
-                        WHEN DATEDIFF(END_DATE, START_DATE) + 1 >= 30 THEN '30%'
-                        WHEN DATEDIFF(END_DATE, START_DATE) + 1 >= 7 THEN '7%'
+                        WHEN RENTAL_DAYS >= 90 THEN '90%'
+                        WHEN RENTAL_DAYS >= 30 THEN '30%'
+                        WHEN RENTAL_DAYS >= 7 THEN '7%'
                         ELSE 'NONE'
                       END) 
 ORDER BY 
