@@ -1,0 +1,22 @@
+WITH HEAVY_USERS AS ( -- 헤비 유저 아이디 테이블
+  SELECT
+    HOST_ID
+  FROM 
+    PLACES
+  GROUP BY
+    HOST_ID
+  HAVING
+    COUNT(ID) >= 2)
+
+SELECT
+  *
+FROM
+  PLACES
+WHERE
+  HOST_ID IN (
+    SELECT
+      HOST_ID
+    FROM
+      HEAVY_USERS)
+ORDER BY
+  ID
