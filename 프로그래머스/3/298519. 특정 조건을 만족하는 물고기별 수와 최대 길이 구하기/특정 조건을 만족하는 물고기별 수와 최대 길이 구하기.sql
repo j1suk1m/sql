@@ -1,10 +1,16 @@
-select count(FISH_TYPE) as FISH_COUNT, 
-       max(LENGTH) as MAX_LENGTH, 
-       FISH_TYPE
-from FISH_INFO
-group by FISH_TYPE
-having avg(case
-                when LENGTH IS NULL then 10
-                else LENGTH
-           end) >= 33
-order by FISH_TYPE
+WITH FISHES AS ( -- 길이가 10cm 이하인 물고기 길이를 10cm로 처리
+    SELECT ID, FISH_TYPE, IFNULL(LENGTH, 10) AS LENGTH, TIME
+    FROM FISH_INFO
+), FISH_AVG_LENGTH AS( -- 물고기 종류별 평균 길이, 최대 길이, 잡은 수
+    SELECT FISH_TYPE, 
+           AVG(LENGTH) AS AVG_LENGTH, 
+           MAX(LENGTH) AS MAX_LENGTH, 
+           COUNT(ID) AS FISH_COUNT
+    FROM FISHES
+    GROUP BY FISH_TYPE
+)
+
+SELECT FISH_COUNT, MAX_LENGTH, FISH_TYPE
+FROM FISH_AVG_LENGTH
+WHERE AVG_LENGTH >= 33
+ORDER BY FISH_TYPE
